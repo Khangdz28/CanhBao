@@ -1,0 +1,17 @@
+local Players = game:GetService("Players") local player = Players.LocalPlayer local CoreGui = game:GetService("CoreGui")
+
+local screenGui = Instance.new("ScreenGui") screenGui.Parent = CoreGui screenGui.IgnoreGuiInset = true screenGui.ResetOnSpawn = false
+
+local background = Instance.new("Frame") background.Size = UDim2.new(1, 0, 1, 0) background.Position = UDim2.new(0, 0, 0, 0) background.BackgroundColor3 = Color3.new(0, 0, 0) background.BackgroundTransparency = 0.4 background.Parent = screenGui
+
+local message = "Vui lòng tắt verify teleport để sử dụng được script nếu không sẽ không có tác dụng\n" .. "Hướng dẫn:\n" .. "Bước 1: ấn biểu tượng Delta\n" .. "Bước 2: ấn vào setting (hình bánh răng)\n" .. "Bước 3: tắt verify teleport\n" .. "Bước 4: out ra vô lại và execute script"
+
+for i = 1, 4 do local outline = Instance.new("TextLabel") outline.Size = UDim2.new(0.8, 0, 0, 200) outline.Position = UDim2.new(0.1, (i==1 and 1) or (i==2 and -1) or 0, 0.3, (i==3 and 1) or (i==4 and -1) or 0) outline.Text = message outline.TextColor3 = Color3.new(0, 0, 0) outline.TextStrokeTransparency = 1 outline.BackgroundTransparency = 1 outline.TextScaled = true outline.Font = Enum.Font.SourceSansBold outline.Parent = screenGui end
+
+local textLabel = Instance.new("TextLabel") textLabel.Size = UDim2.new(0.8, 0, 0, 200) textLabel.Position = UDim2.new(0.1, 0, 0.3, 0) textLabel.Text = message textLabel.TextColor3 = Color3.new(1, 1, 1) textLabel.BackgroundTransparency = 1 textLabel.TextScaled = true textLabel.Font = Enum.Font.SourceSansBold textLabel.Parent = screenGui
+
+local closeButton = Instance.new("TextButton") closeButton.Size = UDim2.new(0, 100, 0, 40) closeButton.Position = UDim2.new(0.85, 0, 0.25, 0) closeButton.Text = "Đóng" closeButton.TextColor3 = Color3.new(1, 1, 1) closeButton.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2) closeButton.Font = Enum.Font.SourceSansBold closeButton.TextScaled = true closeButton.Visible = false closeButton.Parent = screenGui
+
+closeButton.MouseButton1Click:Connect(function() screenGui:Destroy() end)
+
+task.delay(5, function() closeButton.Visible = true end)
