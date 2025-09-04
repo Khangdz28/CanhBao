@@ -4,7 +4,7 @@ local screenGui = Instance.new("ScreenGui") screenGui.Parent = CoreGui screenGui
 
 local background = Instance.new("Frame") background.Size = UDim2.new(1, 0, 1, 0) background.Position = UDim2.new(0, 0, 0, 0) background.BackgroundColor3 = Color3.new(0, 0, 0) background.BackgroundTransparency = 0.4 background.Parent = screenGui
 
-local message = "Vui lòng tắt verify teleport và Anti scam để sử dụng được script nếu không sẽ không có tác dụng\n" .. "Hướng dẫn:\n" .. "Bước 1: ấn biểu tượng Delta\n" .. "Bước 2: ấn vào setting (hình bánh răng)\n" .. "Bước 3: tắt verify teleport và anti scam\n" .. "Bước 4: out ra vô lại và thực hiện các bước trên và execute script"
+local message = " Hãy kiếm tra số người trong sever bạn\n" .. "Hướng dẫn:\n" .. "Bước 1: ấn biểu tượng roblox\n" .. "Bước 2:đếm số người(gồm cả bạn)\n" .. "Bước 3: Nếu số người là 5 thì đổi sever(tránh mất data) \n" .. "Bước 4: out ra vô lại và tìm sever dưới 5 người "
 
 for i = 1, 4 do local outline = Instance.new("TextLabel") outline.Size = UDim2.new(0.8, 0, 0, 200) outline.Position = UDim2.new(0.1, (i==1 and 1) or (i==2 and -1) or 0, 0.3, (i==3 and 1) or (i==4 and -1) or 0) outline.Text = message outline.TextColor3 = Color3.new(0, 0, 0) outline.TextStrokeTransparency = 1 outline.BackgroundTransparency = 1 outline.TextScaled = true outline.Font = Enum.Font.SourceSansBold outline.Parent = screenGui end
 
