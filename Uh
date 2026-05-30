@@ -1,0 +1,512 @@
+-- ╔══════════════════════════════════════════════════════╗
+-- ║     Void External  •  Spawn GUI  •  v2.0           ║
+-- ╚══════════════════════════════════════════════════════╝
+
+local UIS   = game:GetService("UserInputService")
+local RS    = game:GetService("ReplicatedStorage")
+local TweenService = game:GetService("TweenService")
+
+local isMobile = UIS.TouchEnabled and not UIS.KeyboardEnabled
+
+local WIN_W  = isMobile and 370  or 700
+local WIN_H  = isMobile and 390  or 510
+local ITEM_H = isMobile and 22   or 28
+local COL_Y  = isMobile and 50   or 63
+local COL_H  = WIN_H - COL_Y - 10
+
+local ANIMAL_W = isMobile and 115 or 215
+local TRAIT_W  = isMobile and 100 or 185
+local MUT_W    = isMobile and 130 or 248
+local GAP      = isMobile and 5   or 8
+
+-- ── Data ─────────────────────────────────────────────────
+local SOLO_ANIMALS = {
+    "Dragon Gingerini","Hydra Dragon Cannelloni","Antonio","Elefanto Frigo",
+    "Griffin","Skibidi Toilet","Meowl","Strawberry Elephant","Headless Horseman",
+    "Dragon Cannelloni","Signore Carapace","Cerberus","Hydra Bunny","Digi Narwhal",
+    "Globa Steppa","Arcadragon","Ketupat Bros","Ginger Gerat","La Supreme Combinasion",
+    "Love Love Bear","Pancake and Syrup","Fishino Clownino","Kalika Bros",
+    "Spyder Elephant","Dragon Aquanini","John Pork","Jelly Moby"
+}
+local DUO_ANIMALS = {
+    "Popcuru and Fizzuru","Fragrama and Chocrama","Burguro And Fryuro","Los Spaghettis",
+    "Tacorita Bicicleta","W or L","Garama and Madundung","Swaggy Bros",
+    "Spooky and Pumpky","La Secret Combinasion","Dragon Cannelloni","Strawberry Elephant",
+    "Skibidi Toilet","Meowl","Los Hotspotsitos","Tralaledon","Orcaledon",
+    "Los Sekolahs","La Extinct Grande","La Taco Combinasion","Chillin Chili",
+    "Cerberus","Hydra Dragon Cannelloni","Cooki and Milki","La Easter Grande",
+    "Celularcini Viciosini","Rosetti Tualetti","La Food Combinasion","La Casa Boo",
+    "Chipso and Queso","Rosey and Teddy","Lovin Rose","La Ginger Sekolah",
+    "Los Primos","Los Bros","Dragon Gingerini","Festive 67","Ginger Gerat",
+    "La Supreme Combinasion","Celestial Pegasus","Headless Horseman","Capitano Moby",
+    "Reinito Sleighito","Tirilikalika Tirilikalako","Los Amigos","Sammyni Fattini",
+    "Los Tacoritas","Gobblino Uniciclino","Signore Carapace","Elefanto Frigo",
+    "Love Love Bear","Jolly Jolly Sahur","Nacho Spyder","Griffin","Ketupat Bros",
+    "Hydra Bunny","Cash or Card","Hydra Bunny Egg","Foxini Lanternini",
+    "Fortunu and Cashuru","La Anniversary Grande","Money Money Bros",
+    "Ketchuru and Musturu","Dug Dug Dug","Fishino Clownino","Hopilikalika Hopilikalako",
+    "Fragola La La La","Bunny and Eggy","Boppin Bunny","Cloverat Clapat",
+    "Antonio","Quackini Snackini","Gold Gold Gold","Digi Narwhal","Globa Steppa",
+    "Arcadragon","Gym Bros","Los Mariachis","Money Money Reindeer","Kalika Bros",
+    "John Doe","Los Chillis","Los Hackers","Pretzo Robo","Abyssaloco",
+    "Rubrikiko","Eviledon","Raccooni Jandelini","Jelly Moby"
+}
+local _seen, ALL_ANIMALS = {}, {}
+for _, v in ipairs(SOLO_ANIMALS) do
+    if not _seen[v] then _seen[v]=true; table.insert(ALL_ANIMALS,v) end
+end
+for _, v in ipairs(DUO_ANIMALS) do
+    if not _seen[v] then _seen[v]=true; table.insert(ALL_ANIMALS,v) end
+end
+table.sort(ALL_ANIMALS); table.sort(SOLO_ANIMALS); table.sort(DUO_ANIMALS)
+
+-- ── Traits (từ ảnh game) ──────────────────────────────────
+local TRAITS = {
+    "10B","1 Year","26","Blue Balloon","Blue Egg","Brazil","Bubblegum","Bunny Ears",
+    "Chocolate","Claws","Comet-struck","Disco","Explosive","Fire","Fireworks",
+    "Galactic","Glitched","Granny","Green Balloon","Green Egg","Halo",
+    "Indonesia","Jackolantern Pet","John Pork","Lightning","Lucky",
+    "Matteo Hat","Meowl","Nyan","Orange Balloon","Orange Egg","Paint",
+    "Pink Balloon","Pink Egg","Rainbow Balloon","Rain","Red Balloon",
+    "Reindeer Pet","RIP Gravestone","Rose","Santa Hat","Shark Fin",
+    "Skeleton","Skibidi","Sleepy","Snowy","Sombrero","Spider",
+    "Strawberry","Taco","Tie","UFO","Wet","Witch Hat","Zombie"
+}
+table.sort(TRAITS)
+
+-- ── Mutations (từ ảnh game) ───────────────────────────────
+local MUTATIONS = {
+    "None",
+    "Gold","Diamond","Rainbow","Candy","Lava",
+    "Galaxy","Radioactive","Bloodrot","YinYang","Cursed",
+    "Divine","Cyber"
+}
+
+-- ── State ─────────────────────────────────────────────────
+local selectedAnimal   = nil
+local selectedTraits   = {}
+local selectedMutation = "None"
+local animalMode       = "All"
+local guiOpen          = true
+
+local C = {
+    bg        = Color3.fromRGB(15, 15, 20),
+    panel     = Color3.fromRGB(22, 22, 30),
+    titleBg   = Color3.fromRGB(12, 12, 18),
+    item      = Color3.fromRGB(30, 30, 42),
+    itemHov   = Color3.fromRGB(38, 38, 54),
+    itemSel   = Color3.fromRGB(25, 80, 35),
+    inputBg   = Color3.fromRGB(20, 20, 30),
+    accent    = Color3.fromRGB(40, 190, 80),
+    accentDk  = Color3.fromRGB(25, 140, 55),
+    accentGlo = Color3.fromRGB(60, 220, 100),
+    red       = Color3.fromRGB(190, 45, 45),
+    tabSel    = Color3.fromRGB(30, 100, 45),
+    tabBg     = Color3.fromRGB(28, 28, 40),
+    txt       = Color3.fromRGB(230, 230, 235),
+    txtDim    = Color3.fromRGB(120, 120, 140),
+    txtGreen  = Color3.fromRGB(80, 220, 110),
+    txtRed    = Color3.fromRGB(230, 70, 70),
+    border    = Color3.fromRGB(50, 55, 75),
+    shadow    = Color3.fromRGB(0, 0, 0),
+}
+
+local function corner(r, p)
+    local c = Instance.new("UICorner"); c.CornerRadius=UDim.new(0,r); c.Parent=p; return c
+end
+local function stroke(clr, thick, p)
+    local s = Instance.new("UIStroke"); s.Color=clr; s.Thickness=thick; s.Parent=p; return s
+end
+local function pad(t,b,l,r,p)
+    local x = Instance.new("UIPadding")
+    x.PaddingTop=UDim.new(0,t); x.PaddingBottom=UDim.new(0,b)
+    x.PaddingLeft=UDim.new(0,l); x.PaddingRight=UDim.new(0,r)
+    x.Parent=p; return x
+end
+local function gradient(c0,c1,rot,p)
+    local g = Instance.new("UIGradient")
+    g.Color=ColorSequence.new(c0,c1); g.Rotation=rot; g.Parent=p; return g
+end
+local function newFrame(props, parent)
+    local f = Instance.new("Frame")
+    for k,v in pairs(props) do f[k]=v end
+    f.Parent=parent; return f
+end
+local function newLabel(props, parent)
+    local l = Instance.new("TextLabel"); l.BackgroundTransparency=1
+    for k,v in pairs(props) do l[k]=v end
+    l.Parent=parent; return l
+end
+local function newBtn(props, parent)
+    local b = Instance.new("TextButton"); b.BorderSizePixel=0
+    for k,v in pairs(props) do b[k]=v end
+    b.Parent=parent; return b
+end
+local function tween(obj,ti,props) TweenService:Create(obj,ti,props):Play() end
+local TI_FAST = TweenInfo.new(0.18, Enum.EasingStyle.Quad)
+local TI_MED  = TweenInfo.new(0.28, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
+local TI_SLOW = TweenInfo.new(0.4,  Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
+
+for _,v in ipairs(game.CoreGui:GetChildren()) do
+    if v.Name=="VoidSpawnGUI" then v:Destroy() end
+end
+
+local sg = Instance.new("ScreenGui")
+sg.Name="VoidSpawnGUI"; sg.ResetOnSpawn=false
+sg.ZIndexBehavior=Enum.ZIndexBehavior.Sibling
+sg.Parent=game.CoreGui
+
+local shadow = newFrame({
+    Name="Shadow",
+    Size=UDim2.new(0,WIN_W+20,0,WIN_H+20),
+    Position=UDim2.new(0.5,-(WIN_W+20)/2,0.5,-(WIN_H+20)/2+6),
+    BackgroundColor3=C.shadow, BackgroundTransparency=0.55, BorderSizePixel=0,
+}, sg)
+corner(14,shadow)
+
+local main = newFrame({
+    Name="Main",
+    Size=UDim2.new(0,WIN_W,0,WIN_H),
+    Position=UDim2.new(0.5,-WIN_W/2,0.5,-WIN_H/2),
+    BackgroundColor3=C.bg, BorderSizePixel=0,
+    Active=true, ClipsDescendants=true,
+}, sg)
+corner(10,main); stroke(C.border,1,main)
+
+local accentLine = newFrame({Size=UDim2.new(1,0,0,2),BackgroundColor3=C.accent,BorderSizePixel=0},main)
+gradient(C.accentGlo,C.accentDk,0,accentLine)
+
+local bgGrad = newFrame({Size=UDim2.new(1,0,1,0),BackgroundColor3=C.panel,BorderSizePixel=0},main)
+gradient(Color3.fromRGB(22,22,32),Color3.fromRGB(14,14,20),110,bgGrad)
+bgGrad.ZIndex=0
+
+local titleH = isMobile and 38 or 44
+local titleBar = newFrame({
+    Name="TitleBar",Size=UDim2.new(1,0,0,titleH),
+    BackgroundColor3=C.titleBg,BorderSizePixel=0,ZIndex=5,
+},main)
+gradient(Color3.fromRGB(18,18,26),Color3.fromRGB(10,10,16),90,titleBar)
+newFrame({Size=UDim2.new(1,0,0,1),Position=UDim2.new(0,0,1,-1),BackgroundColor3=C.border,BorderSizePixel=0,ZIndex=6},titleBar)
+
+local logoDot = newFrame({Size=UDim2.new(0,8,0,8),Position=UDim2.new(0,12,0.5,-4),BackgroundColor3=C.accent,BorderSizePixel=0,ZIndex=6},titleBar)
+corner(99,logoDot); stroke(C.accentGlo,1.5,logoDot)
+
+newLabel({
+    Text=" Void External  Spawner Tradable  • TikTok:Khngscript",
+    Font=Enum.Font.GothamBold,TextSize=isMobile and 10 or 12,TextColor3=C.txt,
+    Size=UDim2.new(1,-90,1,0),Position=UDim2.new(0,22,0,0),
+    TextXAlignment=Enum.TextXAlignment.Left,ZIndex=6,
+},titleBar)
+
+local function mkTitleBtn(icon,xOff,bg)
+    local b = newBtn({
+        Text=icon,Font=Enum.Font.GothamBold,
+        TextSize=isMobile and 11 or 13,TextColor3=Color3.white,
+        Size=UDim2.new(0,isMobile and 26 or 28,0,isMobile and 26 or 28),
+        Position=UDim2.new(1,xOff,0.5,-(isMobile and 13 or 14)),
+        BackgroundColor3=bg,ZIndex=7,
+    },titleBar)
+    corner(6,b)
+    b.MouseEnter:Connect(function() tween(b,TI_FAST,{BackgroundColor3=bg:Lerp(Color3.new(1,1,1),0.15)}) end)
+    b.MouseLeave:Connect(function() tween(b,TI_FAST,{BackgroundColor3=bg}) end)
+    return b
+end
+local BTN_SIZE = isMobile and 30 or 32
+local closeBtn = mkTitleBtn("✕",-BTN_SIZE-6,      Color3.fromRGB(180,40,40))
+local minBtn   = mkTitleBtn("—",-(BTN_SIZE*2)-10, Color3.fromRGB(40,40,60))
+
+local dragging,dragStart,startPos=false,nil,nil
+titleBar.InputBegan:Connect(function(i)
+    if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then
+        dragging=true; dragStart=i.Position; startPos=main.Position
+    end
+end)
+titleBar.InputEnded:Connect(function(i)
+    if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then
+        dragging=false
+    end
+end)
+UIS.InputChanged:Connect(function(i)
+    if not dragging then return end
+    if i.UserInputType==Enum.UserInputType.MouseMovement or i.UserInputType==Enum.UserInputType.Touch then
+        local d=i.Position-dragStart
+        main.Position=UDim2.new(startPos.X.Scale,startPos.X.Offset+d.X,startPos.Y.Scale,startPos.Y.Offset+d.Y)
+        shadow.Position=UDim2.new(main.Position.X.Scale,main.Position.X.Offset-10,main.Position.Y.Scale,main.Position.Y.Offset-10+6)
+    end
+end)
+
+newLabel({
+    Text="⬡  Spawn",Font=Enum.Font.GothamBold,TextSize=isMobile and 11 or 13,
+    TextColor3=C.accent,Size=UDim2.new(0,120,0,18),
+    Position=UDim2.new(0,12,0,titleH+4),
+    TextXAlignment=Enum.TextXAlignment.Left,ZIndex=5,
+},main)
+
+local function colFrame(xPos,w)
+    return newFrame({Size=UDim2.new(0,w,0,COL_H),Position=UDim2.new(0,xPos,0,COL_Y),BackgroundTransparency=1,ZIndex=3},main)
+end
+local colAnimal   = colFrame(8,ANIMAL_W)
+local colTraits   = colFrame(8+ANIMAL_W+GAP,TRAIT_W)
+local colMutation = colFrame(8+ANIMAL_W+GAP+TRAIT_W+GAP,MUT_W)
+
+local function colHeader(col,txt)
+    local lbl=newLabel({Text=txt,Font=Enum.Font.GothamBold,TextSize=isMobile and 10 or 12,TextColor3=C.txtDim,Size=UDim2.new(1,0,0,16),TextXAlignment=Enum.TextXAlignment.Center,ZIndex=4},col)
+    newFrame({Size=UDim2.new(0.6,0,0,1),Position=UDim2.new(0.2,0,1,-1),BackgroundColor3=C.border,BorderSizePixel=0,ZIndex=4},lbl)
+    return lbl
+end
+colHeader(colAnimal,"Animal"); colHeader(colTraits,"Traits"); colHeader(colMutation,"Mutation")
+
+local function makeSearch(parent,yPos,ph)
+    local wrap=newFrame({Size=UDim2.new(1,0,0,isMobile and 22 or 26),Position=UDim2.new(0,0,0,yPos),BackgroundColor3=C.inputBg,BorderSizePixel=0,ZIndex=4},parent)
+    corner(6,wrap); stroke(C.border,1,wrap)
+    local box=Instance.new("TextBox")
+    box.PlaceholderText=ph; box.PlaceholderColor3=C.txtDim; box.Text=""
+    box.Font=Enum.Font.Gotham; box.TextSize=isMobile and 10 or 11
+    box.TextColor3=C.txt; box.BackgroundTransparency=1; box.BorderSizePixel=0
+    box.ClearTextOnFocus=false; box.Size=UDim2.new(1,0,1,0); box.ZIndex=5; box.Parent=wrap
+    pad(0,0,6,0,box)
+    box.Focused:Connect(function() tween(wrap,TI_FAST,{BackgroundColor3=C.inputBg:Lerp(C.accent,0.08)}); stroke(C.accent,1,wrap) end)
+    box.FocusLost:Connect(function() tween(wrap,TI_FAST,{BackgroundColor3=C.inputBg}); stroke(C.border,1,wrap) end)
+    return box
+end
+
+local function makeScroll(parent,yPos,height)
+    local wrap=newFrame({Size=UDim2.new(1,0,0,height),Position=UDim2.new(0,0,0,yPos),BackgroundColor3=C.item,BorderSizePixel=0,ZIndex=3},parent)
+    corner(7,wrap); stroke(C.border,1,wrap)
+    local sf=Instance.new("ScrollingFrame")
+    sf.Size=UDim2.new(1,0,1,0); sf.BackgroundTransparency=1; sf.BorderSizePixel=0
+    sf.ScrollBarThickness=3; sf.ScrollBarImageColor3=C.accent
+    sf.CanvasSize=UDim2.new(0,0,0,0); sf.AutomaticCanvasSize=Enum.AutomaticSize.Y
+    sf.ZIndex=4; sf.Parent=wrap
+    local layout=Instance.new("UIListLayout"); layout.Padding=UDim.new(0,2); layout.Parent=sf
+    pad(3,3,3,3,sf)
+    return sf
+end
+
+local function makeItem(text,selected,parent,onClk)
+    local b=newBtn({
+        Text=text,Font=Enum.Font.Gotham,TextSize=isMobile and 10 or 11,
+        TextXAlignment=Enum.TextXAlignment.Left,
+        TextColor3=selected and C.txtGreen or C.txt,
+        BackgroundColor3=selected and C.itemSel or Color3.fromRGB(0,0,0),
+        BackgroundTransparency=selected and 0 or 0.6,
+        Size=UDim2.new(1,0,0,ITEM_H),ZIndex=5,AutoButtonColor=false,
+    },parent)
+    corner(5,b); pad(0,0,7,0,b)
+    if selected then stroke(C.accent,1,b) end
+    b.MouseEnter:Connect(function() if not selected then tween(b,TI_FAST,{BackgroundTransparency=0.3,BackgroundColor3=C.itemHov}) end end)
+    b.MouseLeave:Connect(function() if not selected then tween(b,TI_FAST,{BackgroundTransparency=0.6,BackgroundColor3=Color3.fromRGB(0,0,0)}) end end)
+    b.MouseButton1Click:Connect(onClk)
+    return b
+end
+
+-- ANIMAL COLUMN
+local tabY=18; local tabH=isMobile and 20 or 22; local tabW=math.floor(ANIMAL_W/3)
+local tabs={}
+local function setMode(mode)
+    animalMode=mode
+    for m,b in pairs(tabs) do
+        if m==mode then tween(b,TI_FAST,{BackgroundColor3=C.tabSel,BackgroundTransparency=0}); b.TextColor3=C.txtGreen
+        else tween(b,TI_FAST,{BackgroundColor3=C.tabBg,BackgroundTransparency=0.2}); b.TextColor3=C.txtDim end
+    end
+end
+for i,mode in ipairs({"All","Solo","Duo"}) do
+    local b=newBtn({Text=mode,Font=Enum.Font.GothamBold,TextSize=isMobile and 9 or 10,TextColor3=C.txtDim,
+        Size=UDim2.new(0,tabW-3,0,tabH),Position=UDim2.new(0,(i-1)*tabW,0,tabY),
+        BackgroundColor3=C.tabBg,BackgroundTransparency=0.2,AutoButtonColor=false,ZIndex=4},colAnimal)
+    corner(5,b); tabs[mode]=b
+    b.MouseButton1Click:Connect(function() setMode(mode); refreshAnimals() end)
+end
+setMode("All")
+
+local animalSearch=makeSearch(colAnimal,tabY+tabH+3,"Search...")
+local animalScroll=makeScroll(colAnimal,tabY+tabH+28,COL_H-tabY-tabH-34)
+local statusLabel
+
+local function getList()
+    if animalMode=="Solo" then return SOLO_ANIMALS
+    elseif animalMode=="Duo" then return DUO_ANIMALS
+    else return ALL_ANIMALS end
+end
+
+function refreshAnimals()
+    for _,v in ipairs(animalScroll:GetChildren()) do if v:IsA("TextButton") then v:Destroy() end end
+    local q=string.lower(animalSearch.Text)
+    for _,name in ipairs(getList()) do
+        if q=="" or string.find(string.lower(name),q,1,true) then
+            makeItem(name,selectedAnimal==name,animalScroll,function() selectedAnimal=name; refreshAnimals() end)
+        end
+    end
+end
+animalSearch:GetPropertyChangedSignal("Text"):Connect(refreshAnimals)
+
+-- TRAITS COLUMN
+local traitClearH=isMobile and 22 or 26
+local traitSearch=makeSearch(colTraits,18,"Search...")
+local traitScroll=makeScroll(colTraits,43,COL_H-43-traitClearH-4)
+
+function refreshTraits()
+    for _,v in ipairs(traitScroll:GetChildren()) do if v:IsA("TextButton") then v:Destroy() end end
+    local q=string.lower(traitSearch.Text)
+    for _,name in ipairs(TRAITS) do
+        if q=="" or string.find(string.lower(name),q,1,true) then
+            makeItem(name,selectedTraits[name],traitScroll,function()
+                selectedTraits[name]=selectedTraits[name] and nil or true; refreshTraits()
+            end)
+        end
+    end
+end
+traitSearch:GetPropertyChangedSignal("Text"):Connect(refreshTraits)
+
+local clearBtn=newBtn({Text="✖  Clear traits",Font=Enum.Font.GothamBold,TextSize=isMobile and 9 or 11,TextColor3=Color3.white,
+    Size=UDim2.new(1,0,0,traitClearH),Position=UDim2.new(0,0,1,-traitClearH),
+    BackgroundColor3=C.red,AutoButtonColor=false,ZIndex=4},colTraits)
+corner(6,clearBtn)
+clearBtn.MouseEnter:Connect(function() tween(clearBtn,TI_FAST,{BackgroundColor3=Color3.fromRGB(220,55,55)}) end)
+clearBtn.MouseLeave:Connect(function() tween(clearBtn,TI_FAST,{BackgroundColor3=C.red}) end)
+clearBtn.MouseButton1Click:Connect(function() selectedTraits={}; refreshTraits() end)
+
+-- MUTATION COLUMN
+local spawnH=isMobile and 32 or 38
+local statusH=isMobile and 24 or 28
+local qtyRowH=isMobile and 20 or 22
+local emptyH=16; local mutTop=18
+local mutScrollH=COL_H-mutTop-emptyH-qtyRowH-statusH-spawnH-10
+local mutScroll=makeScroll(colMutation,mutTop,mutScrollH)
+
+function refreshMutations()
+    for _,v in ipairs(mutScroll:GetChildren()) do if v:IsA("TextButton") then v:Destroy() end end
+    for _,name in ipairs(MUTATIONS) do
+        makeItem(name,selectedMutation==name,mutScroll,function() selectedMutation=name; refreshMutations() end)
+    end
+end
+
+local INFO_Y=mutTop+mutScrollH+3
+newLabel({Text="Empty: 26/26",Font=Enum.Font.Gotham,TextSize=isMobile and 9 or 10,TextColor3=C.txtDim,
+    Size=UDim2.new(1,0,0,emptyH),Position=UDim2.new(0,0,0,INFO_Y),
+    TextXAlignment=Enum.TextXAlignment.Left,ZIndex=4},colMutation)
+newLabel({Text="Qty",Font=Enum.Font.GothamBold,TextSize=isMobile and 10 or 12,TextColor3=C.txtDim,
+    Size=UDim2.new(0,28,0,qtyRowH),Position=UDim2.new(0,0,0,INFO_Y+emptyH+2),ZIndex=4},colMutation)
+
+local qtyWrap=newFrame({Size=UDim2.new(0,78,0,qtyRowH),Position=UDim2.new(0,30,0,INFO_Y+emptyH+2),BackgroundColor3=C.inputBg,BorderSizePixel=0,ZIndex=4},colMutation)
+corner(5,qtyWrap); stroke(C.border,1,qtyWrap)
+local qtyBox=Instance.new("TextBox")
+qtyBox.Text="1"; qtyBox.Font=Enum.Font.Gotham; qtyBox.TextSize=isMobile and 10 or 12
+qtyBox.TextColor3=C.txt; qtyBox.BackgroundTransparency=1; qtyBox.BorderSizePixel=0
+qtyBox.ClearTextOnFocus=false; qtyBox.Size=UDim2.new(1,0,1,0); qtyBox.ZIndex=5
+qtyBox.Parent=qtyWrap; pad(0,0,5,0,qtyBox)
+
+statusLabel=newLabel({
+    Text="Plot: OK  |  Client: OK\nChannel: OK  |  Slots: 26",
+    Font=Enum.Font.Gotham,TextSize=isMobile and 8 or 9,TextColor3=C.txtGreen,
+    Size=UDim2.new(1,0,0,statusH),Position=UDim2.new(0,0,0,INFO_Y+emptyH+qtyRowH+4),
+    TextXAlignment=Enum.TextXAlignment.Left,TextWrapped=true,ZIndex=4,
+},colMutation)
+
+-- Spawn button
+local spawnWrap=newFrame({Size=UDim2.new(1,0,0,spawnH),Position=UDim2.new(0,0,1,-spawnH),BackgroundColor3=C.accent,BorderSizePixel=0,ZIndex=4},colMutation)
+corner(8,spawnWrap); gradient(C.accentGlo,C.accentDk,90,spawnWrap)
+local spawnBtn=newBtn({Text="⬡  Spawn",Font=Enum.Font.GothamBold,TextSize=isMobile and 12 or 14,TextColor3=Color3.fromRGB(10,10,10),BackgroundTransparency=1,Size=UDim2.new(1,0,1,0),AutoButtonColor=false,ZIndex=5},spawnWrap)
+spawnBtn.MouseEnter:Connect(function() tween(spawnWrap,TI_FAST,{BackgroundColor3=C.accentGlo}) end)
+spawnBtn.MouseLeave:Connect(function() tween(spawnWrap,TI_FAST,{BackgroundColor3=C.accent}) end)
+
+local function setStatus(txt,isErr)
+    statusLabel.Text=txt
+    statusLabel.TextColor3=isErr and C.txtRed or C.txtGreen
+    if isErr then
+        task.delay(4,function()
+            statusLabel.Text="Plot: OK  |  Client: OK\nChannel: OK  |  Slots: 26"
+            statusLabel.TextColor3=C.txtGreen
+        end)
+    end
+end
+
+-- ══════════════════════════════════════════════════════════
+-- SPAWN LOGIC  ← separator ", " + nil-check RF
+-- ══════════════════════════════════════════════════════════
+spawnBtn.MouseButton1Click:Connect(function()
+    if not selectedAnimal then setStatus("⚠ Select an animal first!",true); return end
+
+    local tList={}
+    for t,_ in pairs(selectedTraits) do table.insert(tList,t) end
+    local traitStr = table.concat(tList, ", ")   -- ← ", " có space
+
+    local mut = (selectedMutation=="None") and "" or selectedMutation
+    local count = math.clamp(tonumber(qtyBox.Text) or 1, 1, 99)
+
+    -- Nil-check từng bước
+    local pkgs = RS:FindFirstChild("Packages")
+    if not pkgs then setStatus("✕ RS.Packages not found!",true); return end
+    local net = pkgs:FindFirstChild("Net")
+    if not net then setStatus("✕ RS.Packages.Net not found!",true); return end
+    local rf = net:FindFirstChild("RF/AdminService/SpawnBrainrotInBase")
+    if not rf then setStatus("✕ RF not found!",true); return end
+
+    setStatus("↑ Spawning "..selectedAnimal.." ×"..count.."...",false)
+    task.spawn(function()
+        for i=1,count do
+            local ok,err=pcall(function()
+                rf:InvokeServer(selectedAnimal, mut, traitStr, "")
+            end)
+            if not ok then
+                setStatus("✕ "..tostring(err):sub(1,60),true)
+                return
+            end
+            if count>1 then task.wait(0.15) end
+        end
+        setStatus("✓ Spawned "..selectedAnimal.." ×"..count,false)
+        task.delay(3,function()
+            setStatus("Plot: OK  |  Client: OK\nChannel: OK  |  Slots: 26",false)
+        end)
+    end)
+end)
+
+-- TOGGLE BUTTON
+local toggleSize=isMobile and 44 or 50
+local toggleFrame=newFrame({Size=UDim2.new(0,toggleSize,0,toggleSize),Position=UDim2.new(0,14,0.5,-toggleSize/2),BackgroundColor3=C.accent,BorderSizePixel=0,ZIndex=10},sg)
+corner(99,toggleFrame); stroke(Color3.fromRGB(80,220,120),1.5,toggleFrame); gradient(C.accentGlo,C.accentDk,120,toggleFrame)
+newFrame({Size=UDim2.new(1,8,1,8),Position=UDim2.new(0,-4,0,-2),BackgroundColor3=Color3.fromRGB(0,0,0),BackgroundTransparency=0.6,BorderSizePixel=0,ZIndex=9},toggleFrame)
+local toggleBtn=newBtn({Text="⬡",Font=Enum.Font.GothamBold,TextSize=isMobile and 18 or 20,TextColor3=Color3.fromRGB(10,10,10),BackgroundTransparency=1,Size=UDim2.new(1,0,1,0),AutoButtonColor=false,ZIndex=11},toggleFrame)
+
+local function setGuiOpen(open)
+    guiOpen=open
+    if open then
+        main.Visible=true; shadow.Visible=true
+        tween(main,TI_MED,{Size=UDim2.new(0,WIN_W,0,WIN_H),Position=UDim2.new(0.5,-WIN_W/2,0.5,-WIN_H/2)})
+        toggleBtn.Text="✕"; tween(toggleFrame,TI_FAST,{BackgroundColor3=C.red})
+    else
+        tween(main,TI_MED,{Size=UDim2.new(0,WIN_W,0,0),Position=UDim2.new(0.5,-WIN_W/2,0.5,0)})
+        task.delay(0.3,function() main.Visible=false; shadow.Visible=false end)
+        toggleBtn.Text="⬡"; tween(toggleFrame,TI_FAST,{BackgroundColor3=C.accent})
+    end
+end
+toggleBtn.MouseButton1Click:Connect(function() setGuiOpen(not guiOpen) end)
+toggleFrame.MouseEnter:Connect(function() tween(toggleFrame,TI_FAST,{BackgroundColor3=guiOpen and Color3.fromRGB(220,55,55) or C.accentGlo}) end)
+toggleFrame.MouseLeave:Connect(function() tween(toggleFrame,TI_FAST,{BackgroundColor3=guiOpen and C.red or C.accent}) end)
+closeBtn.MouseButton1Click:Connect(function() setGuiOpen(false) end)
+
+local isMinimized=false
+minBtn.MouseButton1Click:Connect(function()
+    isMinimized=not isMinimized
+    local targetH=isMinimized and titleH or WIN_H
+    tween(main,TI_MED,{Size=UDim2.new(0,WIN_W,0,targetH)})
+    tween(shadow,TI_MED,{Size=UDim2.new(0,WIN_W+20,0,targetH+20)})
+    for _,col in ipairs({colAnimal,colTraits,colMutation}) do col.Visible=not isMinimized end
+    minBtn.Text=isMinimized and "□" or "—"
+end)
+
+task.spawn(function()
+    while main.Parent do
+        tween(logoDot,TweenInfo.new(1.2,Enum.EasingStyle.Sine,Enum.EasingDirection.InOut),{BackgroundColor3=C.accentDk})
+        task.wait(1.2)
+        tween(logoDot,TweenInfo.new(1.2,Enum.EasingStyle.Sine,Enum.EasingDirection.InOut),{BackgroundColor3=C.accentGlo})
+        task.wait(1.2)
+    end
+end)
+
+refreshAnimals(); refreshTraits(); refreshMutations()
+main.Size=UDim2.new(0,WIN_W,0,0)
+main.Position=UDim2.new(0.5,-WIN_W/2,0.5,0)
+task.wait(0.05)
+tween(main,TI_SLOW,{Size=UDim2.new(0,WIN_W,0,WIN_H),Position=UDim2.new(0.5,-WIN_W/2,0.5,-WIN_H/2)})
+print("[VoidSpawnGUI v2] Device:", isMobile and "Mobile" or "PC", "| Size:", WIN_W.."×"..WIN_H)
